@@ -133,8 +133,75 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function useAvatarFavicon() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const img = new Image();
+    img.src = "/profile.png";
+    img.onload = () => {
+      try {
+        const size = 64;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Draw crisp outer accent ring for visibility on both dark and light browser tabs
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2);
+        ctx.fillStyle = "#2563eb";
+        ctx.fill();
+
+        // Inner clipping circle
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Crop face from the wide portrait photo (centers horizontally, keeps hair & face)
+        const cropSize = img.height * 0.85;
+        const sx = (img.width - cropSize) / 2;
+        const sy = 0;
+
+        ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, size, size);
+        ctx.restore();
+
+        const dataUrl = canvas.toDataURL("image/png");
+
+        const linkSelectors = [
+          "link[rel='icon']",
+          "link[rel='shortcut icon']",
+          "link[rel='apple-touch-icon']",
+        ];
+
+        linkSelectors.forEach((selector) => {
+          let link = document.querySelector(selector) as HTMLLinkElement;
+          if (!link) {
+            link = document.createElement("link");
+            link.rel = selector.includes("apple")
+              ? "apple-touch-icon"
+              : selector.includes("shortcut")
+                ? "shortcut icon"
+                : "icon";
+            document.head.appendChild(link);
+          }
+          link.type = "image/png";
+          link.href = dataUrl;
+        });
+      } catch (err) {
+        console.error("Failed to generate avatar favicon:", err);
+      }
+    };
+  }, []);
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useAvatarFavicon();
 
   return (
     <QueryClientProvider client={queryClient}>
