@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Download } from "lucide-react";
-import profileImg from "@/assets/profile.jpg";
+import profileImg from "@/assets/profile.png";
 import { FadeIn } from "./FadeIn";
 
 export function Hero() {
